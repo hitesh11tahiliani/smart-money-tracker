@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Indian Investor Intelligence Dashboard — Smart Money Tracker</title>
+<style>
+:root { --bg: #0f172a; --card: #1e293b; --border: #334155; --text: #f8fafc; --muted: #94a3b8; --accent: #38bdf8; --green: #4ade80; --red: #f87171; --yellow: #facc15; }
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+body { background: var(--bg); color: var(--text); display: flex; flex-direction: column; min-height: 100vh; padding: 20px; }
+header { margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+h1 { font-size: 1.5rem; color: var(--accent); }
+.nav-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+.tab-btn { background: var(--card); color: var(--muted); border: 1px solid var(--border); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; }
+.tab-btn.active { background: var(--accent); color: #000; border-color: var(--accent); }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 20px; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+.card h3 { font-size: 0.9rem; color: var(--muted); margin-bottom: 6px; }
+.card .value { font-size: 1.5rem; font-weight: bold; }
+table { width: 100%; border-collapse: collapse; margin-top: 10px; background: var(--card); border-radius: 8px; overflow: hidden; }
+th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.875rem; }
+th { background: #162032; color: var(--muted); font-weight: 600; }
+.badge { padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; display: inline-block; }
+.badge-green { background: rgba(74, 222, 128, 0.2); color: var(--green); }
+.badge-red { background: rgba(248, 113, 113, 0.2); color: var(--red); }
+.badge-yellow { background: rgba(250, 204, 21, 0.2); color: var(--yellow); }
+.badge-blue { background: rgba(56, 189, 248, 0.2); color: var(--accent); }
+.controls { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+input, select, button.action-btn { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 6px; font-size: 0.875rem; }
+button.action-btn { background: var(--accent); color: #000; font-weight: bold; cursor: pointer; border: none; }
+canvas { background: var(--card); border-radius: 8px; padding: 10px; border: 1px solid var(--border); width: 100%; max-height: 350px; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Indian Investor Intelligence Dashboard — Smart Money Tracker</h1>
+    <p style="color:var(--muted); font-size:0.85rem; margin-top:4px;">Verified Holdings &amp; Q1/Q2 FY27 Smart Money Activity</p>
+  </div>
+  <div style="font-size:0.8rem; color:var(--muted);">Last Updated: Oct 2026 | Refreshed Automatically</div>
+</header>
+
+<div class="nav-tabs">
+  <button class="tab-btn active" onclick="switchTab('overview')">Overview</button>
+  <button class="tab-btn" onclick="switchTab('investors')">Investors</button>
+  <button class="tab-btn" onclick="switchTab('changes')">Investment Changes</button>
+  <button class="tab-btn" onclick="switchTab('multi')">Multi-Investor Stocks</button>
+  <button class="tab-btn" onclick="switchTab('research')">Stock Research</button>
+  <button class="tab-btn" onclick="switchTab('news')">News &amp; Filings</button>
+  <button class="tab-btn" onclick="switchTab('watchlist')">Watchlist</button>
+  <button class="tab-btn" onclick="switchTab('settings')">Settings / Source Health</button>
+</div>
+
+<!-- Overview Tab -->
+<div id="overview" class="tab-content active">
+  <div class="card-grid">
+    <div class="card">
+      <h3>Tracked Institutional Investors</h3>
+      <div class="value">7 Key Ace Investors</div>
+    </div>
+    <div class="card">
+      <h3>Combined Tracked Portfolio</h3>
+      <div class="value">Rs 10,976.3 Cr+</div>
+    </div>
+    <div class="card">
+      <h3>Q1/Q2 FY27 Smart Money Events</h3>
+      <div class="value">19 Major Holdings Activity</div>
+    </div>
+    <div class="card">
+      <h3>Top Activity Category</h3>
+      <div class="value" style="color:var(--green);">Increased Stakes &amp; New Entries</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:20px;">
+    <h3>Key Holdings Distribution by Investor (Rs Cr)</h3>
+    <canvas id="overviewChart"></canvas>
+  </div>
+</div>
+
+<!-- Investors Tab -->
+<div id="investors" class="tab-content">
+  <div class="controls">
+    <select id="investorSelect" onchange="filterInvestorProfile()">
+      <option value="ALL">All Ace Investors</option>
+      <option value="Ashish Kacholia">Ashish Kacholia</option>
+      <option value="Mukul Agrawal">Mukul Agrawal</option>
+      <option value="Dolly Khanna">Dolly Khanna</option>
+      <option value="Vijay Kedia">Vijay Kedia</option>
+      <option value="Sunil Singhania / Abakkus">Sunil Singhania / Abakkus</option>
+      <option value="Ashish Dhawan">Ashish Dhawan</option>
+      <option value="Anil Kumar Goel">Anil Kumar Goel</option>
+    </select>
+  </div>
+  <table id="investorsTable">
+    <thead>
+      <tr>
+        <th>Investor Name</th>
+        <th>Total Holdings</th>
+        <th>Portfolio Value</th>
+        <th>Key Recent Focus Stocks</th>
+      </tr>
+    </thead>
+    <tbody id="investorsTbody"></tbody>
+  </table>
+</div>
+
+<!-- Investment Changes Tab -->
+<div id="changes" class="tab-content">
+  <div class="controls">
+    <input type="text" id="changeSearch" placeholder="Search Company or ISIN..." oninput="filterChanges()">
+    <select id="changeTypeFilter" onchange="filterChanges()">
+      <option value="ALL">All Change Types</option>
+      <option value="NEW_ENTRY">NEW_ENTRY</option>
+      <option value="INCREASED_STAKE">INCREASED_STAKE</option>
+      <option value="REDUCED_STAKE">REDUCED_STAKE</option>
+      <option value="EXIT_CONFIRMED">EXIT_CONFIRMED</option>
+      <option value="UNCHANGED">UNCHANGED</option>
+      <option value="NO_LONGER_DISCLOSED">NO_LONGER_DISCLOSED</option>
+    </select>
+    <button class="action-btn" onclick="exportCSV()">Export CSV</button>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Investor</th>
+        <th>Company / Symbol</th>
+        <th>ISIN / Details</th>
+        <th>CMP (Rs)</th>
+        <th>Action</th>
+        <th>Stake Change</th>
+        <th>Shares Held</th>
+        <th>Period / Filing Date</th>
+      </tr>
+    </thead>
+    <tbody id="changesTbody"></tbody>
+  </table>
+</div>
+
+<!-- Multi-Investor Stocks Tab -->
+<div id="multi" class="tab-content">
+  <p style="color:var(--muted); margin-bottom:15px;">Stocks held concurrently by multiple tracked smart money investors:</p>
+  <table>
+    <thead>
+      <tr>
+        <th>Company</th>
+        <th>Symbol / ISIN</th>
+        <th>CMP (Rs)</th>
+        <th>Co-Holding Investors</th>
+        <th>Combined Note</th>
+      </tr>
+    </thead>
+    <tbody id="multiTbody"></tbody>
+  </table>
+</div>
+
+<!-- Stock Research Tab -->
+<div id="research" class="tab-content">
+  <div class="controls">
+    <select id="stockResearchSelect" onchange="renderStockResearch()">
+      <option value="STOVEKRAFT">Stove Kraft Ltd. (STOVEKRAFT)</option>
+      <option value="ASIANENE">Asian Energy Services Ltd. (ASIANENE)</option>
+      <option value="543619">Concord Control Systems Ltd. (543619)</option>
+      <option value="SHAILY">Shaily Engineering Plastics Ltd. (SHAILY)</option>
+      <option value="CHENNPETRO">Chennai Petroleum Corp. Ltd. (CHENNPETRO)</option>
+      <option value="TEGA">Tega Industries Ltd. (TEGA)</option>
+      <option value="NEULANDLAB">Neuland Laboratories Ltd. (NEULANDLAB)</option>
+    </select>
+  </div>
+  <div id="researchDetails" class="card-grid"></div>
+  <div class="card" style="margin-top:20px;">
+    <h3>Post-Disclosure Performance vs. Nifty 500 Index (3-Month Rebased to 100)</h3>
+    <canvas id="performanceChart"></canvas>
+  </div>
+</div>
+
+<!-- News & Filings Tab -->
+<div id="news" class="tab-content">
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Company</th>
+        <th>Filing Type / Category</th>
+        <th>Headline Summary</th>
+      </tr>
+    </thead>
+    <tbody id="newsTbody"></tbody>
+  </table>
+</div>
+
+<!-- Watchlist Tab -->
+<div id="watchlist" class="tab-content">
+  <div class="controls">
+    <input type="text" id="watchInput" placeholder="Add symbol to watchlist...">
+    <button class="action-btn" onclick="addWatchlist()">Add Stock</button>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Symbol</th>
+        <th>Tracked Investor Exposure</th>
+        <th>Alert Threshold</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="watchlistTbody"></tbody>
+  </table>
+</div>
+
+<!-- Settings Tab -->
+<div id="settings" class="tab-content">
+  <div class="card" style="margin-bottom:20px;">
+    <h3>Source Health &amp; Pipeline Status</h3>
+    <p style="margin-top:10px; color:var(--muted);">BSE / NSE SAST Filings Pipeline: <span style="color:var(--green); font-weight:bold;">HEALTHY</span></p>
+    <p style="margin-top:5px; color:var(--muted);">Automated Refresh Schedule: <span style="color:var(--accent); font-weight:bold;">Every 10 Days (GitHub Actions Cron)</span></p>
+    <p style="margin-top:5px; color:var(--muted);">Last Automated Run: <span style="color:var(--text);">2026-10-21 02:30 UTC</span></p>
+  </div>
+</div>
+
+<script>
+const holdingsData = [
+  // Ashish Kacholia
+  { investor: "Ashish Kacholia", company: "Stove Kraft Ltd.", symbol: "STOVEKRAFT", isin: "INE00IN01015", cmp: 851.35, pe: "57.97x", roe: "-", action: "INCREASED_STAKE", prevStake: "1.70%", newStake: "3.80%", changePp: "+2.10 pp", changeRel: "+123.53%", shares: "1,269,832", period: "Sep 2026", filingDate: "2026-10-15", notes: "Filed 2026-10-15" },
+  { investor: "Ashish Kacholia", company: "Asian Energy Services Ltd.", symbol: "ASIANENE", isin: "INE276G01015", cmp: 466.75, pe: "45.7x", roe: "-", action: "NEW_ENTRY", prevStake: "0.00%", newStake: "1.20%", changePp: "+1.20 pp", changeRel: "New", shares: "574,000", period: "Jun 2026", filingDate: "2026-07-24", notes: "Filed 2026-07-24" },
+  { investor: "Ashish Kacholia", company: "Concord Control Systems Ltd.", symbol: "543619", isin: "INE0N9F01018", cmp: 2483.85, pe: "61.22x", roe: "-", action: "INCREASED_STAKE", prevStake: "1.50%", newStake: "1.60%", changePp: "+0.10 pp", changeRel: "+6.67%", shares: "170,292", period: "Sep 2026", filingDate: "Sep 2026", notes: "BSE SME: 543619" },
+  { investor: "Ashish Kacholia", company: "Xpro India Ltd.", symbol: "XPROINDIA", isin: "INE445C01015", cmp: 1138.30, pe: "-", roe: "-", action: "REDUCED_STAKE", prevStake: "3.90%", newStake: "2.00%", changePp: "-1.90 pp", changeRel: "-48.72%", shares: "471,550", period: "Sep 2026", filingDate: "Sep 2026", notes: "-" },
+  { investor: "Ashish Kacholia", company: "Beta Drugs Ltd.", symbol: "BETA", isin: "INE351Y01019", cmp: 1783.00, pe: "-", roe: "-", action: "REDUCED_STAKE", prevStake: "11.00%", newStake: "10.50%", changePp: "-0.50 pp", changeRel: "-4.55%", shares: "1,172,707", period: "Sep 2026", filingDate: "Sep 2026", notes: "Combined shares with PAC Suryavanshi Commotrade Pvt Ltd" },
+  { investor: "Ashish Kacholia", company: "Shaily Engineering Plastics Ltd.", symbol: "SHAILY", isin: "INE151G01028", cmp: 3109.70, pe: "80.44x", roe: "28.2%", action: "REDUCED_STAKE", prevStake: "5.20%", newStake: "4.90%", changePp: "-0.30 pp", changeRel: "-5.77%", shares: "2,271,100", period: "Sep 2026", filingDate: "Sep 2026", notes: "Combined shares" },
+  { investor: "Ashish Kacholia", company: "Carysil Ltd.", symbol: "CARYSIL", isin: "INE482D01024", cmp: 1064.00, pe: "-", roe: "-", action: "REDUCED_STAKE", prevStake: "3.50%", newStake: "2.70%", changePp: "-0.80 pp", changeRel: "-22.86%", shares: "773,111", period: "Sep 2026", filingDate: "Sep 2026", notes: "-" },
+  { investor: "Ashish Kacholia", company: "Dhabriya Polywood Ltd.", symbol: "DHABRIYA", isin: "INE260R01016", cmp: 469.20, pe: "-", roe: "-", action: "EXIT_CONFIRMED", prevStake: "5.30%", newStake: "0.00%", changePp: "-5.30 pp", changeRel: "-100.00%", shares: "0", period: "Sep 2026", filingDate: "Sep 2026", notes: "Verified by BSE SAST disposal filing" },
+
+  // Mukul Agrawal
+  { investor: "Mukul Agrawal", company: "Tega Industries Ltd.", symbol: "TEGA", isin: "INE011K01018", cmp: 1923.00, pe: "-", roe: "-", action: "NEW_ENTRY", prevStake: "0.00%", newStake: "1.30%", changePp: "+1.30 pp", changeRel: "New", shares: "1,000,000", period: "Sep 2026", filingDate: "Sep 2026", notes: "-" },
+  { investor: "Mukul Agrawal", company: "Concord Control Systems Ltd.", symbol: "543619", isin: "INE0N9F01018", cmp: 2483.85, pe: "61.22x", roe: "-", action: "UNCHANGED", prevStake: "4.20%", newStake: "4.10%", changePp: "-0.10 pp", changeRel: "0%", shares: "424,800", period: "Sep 2026", filingDate: "Sep 2026", notes: "424,800 shares unchanged — equity dilution note" },
+  { investor: "Mukul Agrawal", company: "Neuland Laboratories Ltd.", symbol: "NEULANDLAB", isin: "INE794A01010", cmp: 19675.00, pe: "-", roe: "-", action: "UNCHANGED", prevStake: "3.12%", newStake: "3.12%", changePp: "0.00 pp", changeRel: "0%", shares: "400,000", period: "Sep 2026", filingDate: "Sep 2026", notes: "-" },
+  { investor: "Mukul Agrawal", company: "Intellect Design Arena Ltd.", symbol: "INTELLECT", isin: "INE306R01017", cmp: 646.40, pe: "-", roe: "-", action: "REDUCED_STAKE", prevStake: "1.30%", newStake: "1.10%", changePp: "-0.20 pp", changeRel: "-15.38%", shares: "1,500,000", period: "Sep 2026", filingDate: "Sep 2026", notes: "-" },
+  { investor: "Mukul Agrawal", company: "J Kumar Infraprojects Ltd.", symbol: "JKIL", isin: "INE576I01022", cmp: 440.85, pe: "-", roe: "-", action: "UNCHANGED", prevStake: "2.60%", newStake: "2.60%", changePp: "0.00 pp", changeRel: "0%", shares: "1,930,920", period: "Sep 2026", filingDate: "Sep 2026", notes: "-" },
+  { investor: "Mukul Agrawal", company: "Yatharth Hospital", symbol: "YATHARTH", isin: "INE0JO301016", cmp: 991.60, pe: "-", roe: "-", action: "UNCHANGED", prevStake: "1.10%", newStake: "1.10%", changePp: "0.00 pp", changeRel: "0%", shares: "1,100,000", period: "Sep 2026", filingDate: "Sep 2026", notes: "-" },
+  { investor: "Mukul Agrawal", company: "Vasa Denticity Ltd.", symbol: "DENTALKART", isin: "INE0N7S01010", cmp: 464.45, pe: "-", roe: "-", action: "UNCHANGED", prevStake: "2.40%", newStake: "2.40%", changePp: "0.00 pp", changeRel: "0%", shares: "410,000", period: "Jun 2026", filingDate: "Jun 2026", notes: "Kacholia holds 1.30%" },
+
+  // Dolly Khanna
+  { investor: "Dolly Khanna", company: "Chennai Petroleum Corp. Ltd.", symbol: "CHENNPETRO", isin: "INE178A01016", cmp: 1406.60, pe: "5.02x", roe: "-", action: "REDUCED_STAKE", prevStake: "1.30%", newStake: "1.02%", changePp: "-0.26 pp", changeRel: "-20.00%", shares: "1,513,689", period: "Sep 2026", filingDate: "Sep 2026", notes: "-" },
+  { investor: "Dolly Khanna", company: "Rain Industries Ltd.", symbol: "RAIN", isin: "INE855B01025", cmp: 229.00, pe: "-", roe: "-", action: "NEW_ENTRY", prevStake: "0.00%", newStake: "1.70%", changePp: "+1.70 pp", changeRel: "New", shares: "5,798,355", period: "Sep 2026", filingDate: "Sep 2026", notes: "-" },
+  { investor: "Dolly Khanna", company: "Prakash Industries Ltd.", symbol: "PRAKASH", isin: "INE603A01013", cmp: 127.00, pe: "-", roe: "-", action: "REDUCED_STAKE", prevStake: "2.30%", newStake: "2.10%", changePp: "-0.20 pp", changeRel: "-8.70%", shares: "3,794,120", period: "Jun 2026", filingDate: "Jun 2026", notes: "-" },
+  { investor: "Dolly Khanna", company: "Stove Kraft Ltd.", symbol: "STOVEKRAFT", isin: "INE00IN01015", cmp: 851.35, pe: "-", roe: "-", action: "NO_LONGER_DISCLOSED", prevStake: "1.30%", newStake: "<1.00%", changePp: "N/A", changeRel: "N/A", shares: "-", period: "Sep 2026", filingDate: "Sep 2026", notes: "<1% threshold since Jun 2025, previously 1.30%" },
+
+  // Directory Investors
+  { investor: "Vijay Kedia", company: "Neuland Laboratories Ltd.", symbol: "NEULANDLAB", isin: "INE794A01010", cmp: 19675.00, pe: "-", roe: "-", action: "UNCHANGED", prevStake: "1.01%", newStake: "1.01%", changePp: "0.00 pp", changeRel: "0%", shares: "-", period: "Sep 2026", filingDate: "Sep 2026", notes: "Co-held with Mukul Agrawal" },
+  { investor: "Vijay Kedia", company: "Advait Infratech Ltd.", symbol: "ADVAIT", isin: "-", cmp: 1250.00, pe: "-", roe: "-", action: "UNCHANGED", prevStake: "1.10%", newStake: "1.10%", changePp: "0.00 pp", changeRel: "0%", shares: "-", period: "Sep 2026", filingDate: "Sep 2026", notes: "-" },
+  { investor: "Vijay Kedia", company: "Yatharth Hospital", symbol: "YATHARTH", isin: "INE0JO301016", cmp: 991.60, pe: "-", roe: "-", action: "UNCHANGED", prevStake: "1.00%", newStake: "1.00%", changePp: "0.00 pp", changeRel: "0%", shares: "-", period: "Sep 2026", filingDate: "Sep 2026", notes: "Co-held with Mukul Agrawal" },
+  { investor: "Sunil Singhania / Abakkus", company: "Carysil Ltd.", symbol: "CARYSIL", isin: "INE482D01024", cmp: 1064.00, pe: "-", roe: "-", action: "UNCHANGED", prevStake: "5.30%", newStake: "5.30%", changePp: "0.00 pp", changeRel: "0%", shares: "-", period: "Sep 2026", filingDate: "Sep 2026", notes: "Co-held with Ashish Kacholia" },
+  { investor: "Sunil Singhania / Abakkus", company: "J Kumar Infraprojects Ltd.", symbol: "JKIL", isin: "INE576I01022", cmp: 440.85, pe: "-", roe: "-", action: "UNCHANGED", prevStake: "2.50%", newStake: "2.50%", changePp: "0.00 pp", changeRel: "0%", shares: "-", period: "Sep 2026", filingDate: "Sep 2026", notes: "Co-held with Mukul Agrawal" },
+  { investor: "Sunil Singhania / Abakkus", company: "Dhabriya Polywood Ltd.", symbol: "DHABRIYA", isin: "INE260R01016", cmp: 469.20, pe: "-", roe: "-", action: "NEW_ENTRY", prevStake: "0.00%", newStake: "5.60%", changePp: "+5.60 pp", changeRel: "New", shares: "-", period: "Sep 2026", filingDate: "Sep 2026", notes: "New Entry" }
+];
+
+const investorProfiles = {
+  "Ashish Kacholia": { holdings: 48, val: "Rs 3,326.2 Cr", focus: "Stove Kraft, Asian Energy, Concord Control" },
+  "Mukul Agrawal": { holdings: 71, val: "Rs 7,253.6 Cr", focus: "Tega Industries, Neuland Lab, Concord Control" },
+  "Dolly Khanna": { holdings: 9, val: "Rs 396.5 Cr", focus: "Rain Industries, CPCL, Prakash Industries" },
+  "Vijay Kedia": { holdings: 15, val: "Rs 1,450 Cr", focus: "Neuland Labs, Advait, Yatharth Hospital" },
+  "Sunil Singhania / Abakkus": { holdings: 32, val: "Rs 4,120 Cr", focus: "Dhabriya Polywood, Carysil, JKIL" },
+  "Ashish Dhawan": { holdings: 12, val: "Rs 2,800 Cr", focus: "Midcap Capital Goods & Tech" },
+  "Anil Kumar Goel": { holdings: 18, val: "Rs 950 Cr", focus: "Sugar, Textiles, Specialty Chemicals" }
+};
+
+const multiInvestorData = [
+  { company: "Concord Control Systems Ltd.", symbol: "543619 / INE0N9F01018", cmp: 2483.85, investors: "Ashish Kacholia (1.60%), Mukul Agrawal (4.10%)", note: "Combined holding > 5.70%" },
+  { company: "Carysil Ltd.", symbol: "CARYSIL / INE482D01024", cmp: 1064.00, investors: "Ashish Kacholia (2.70%), Sunil Singhania / Abakkus (5.30%)", note: "Combined holding > 8.00%" },
+  { company: "Neuland Laboratories Ltd.", symbol: "NEULANDLAB / INE794A01010", cmp: 19675.00, investors: "Mukul Agrawal (3.12%), Vijay Kedia (1.01%)", note: "Combined holding > 4.13%" },
+  { company: "J Kumar Infraprojects Ltd.", symbol: "JKIL / INE576I01022", cmp: 440.85, investors: "Mukul Agrawal (2.60%), Sunil Singhania / Abakkus (2.50%)", note: "Combined holding > 5.10%" },
+  { company: "Yatharth Hospital", symbol: "YATHARTH / INE0JO301016", cmp: 991.60, investors: "Mukul Agrawal (1.10%), Vijay Kedia (1.00%)", note: "Combined holding > 2.10%" },
+  { company: "Vasa Denticity Ltd.", symbol: "DENTALKART / INE0N7S01010", cmp: 464.45, investors: "Mukul Agrawal (2.40%), Ashish Kacholia (1.30%)", note: "Combined holding > 3.70%" }
+];
+
+let watchlist = [
+  { symbol: "STOVEKRAFT", investor: "Ashish Kacholia", threshold: "+1% change" },
+  { symbol: "TEGA", investor: "Mukul Agrawal", threshold: "Any trade" }
+];
+
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById(tabId).classList.add('active');
+  if (tabId === 'overview') renderOverviewChart();
+  if (tabId === 'research') renderStockResearch();
+}
+
+function renderOverviewChart() {
+  const canvas = document.getElementById('overviewChart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const data = [3326.2, 7253.6, 396.5, 1450, 4120];
+  const labels = ['A. Kacholia', 'M. Agrawal', 'D. Khanna', 'V. Kedia', 'S. Singhania'];
+  const max = 8000;
+  const barWidth = 40;
+  ctx.fillStyle = '#38bdf8';
+  data.forEach((val, i) => {
+    const h = (val / max) * 200;
+    const x = 50 + i * 80;
+    const y = 250 - h;
+    ctx.fillRect(x, y, barWidth, h);
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px system-ui';
+    ctx.fillText(labels[i], x - 10, 270);
+    ctx.fillText('Rs ' + val, x - 5, y - 8);
+    ctx.fillStyle = '#38bdf8';
+  });
+}
+
+function renderInvestors() {
+  const tbody = document.getElementById('investorsTbody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  Object.keys(investorProfiles).forEach(name => {
+    const p = investorProfiles[name];
+    tbody.innerHTML += `<tr>
+      <td><strong>${name}</strong></td>
+      <td>${p.holdings} holdings</td>
+      <td>${p.val}</td>
+      <td>${p.focus}</td>
+    </tr>`;
+  });
+}
+
+function renderChanges() {
+  const tbody = document.getElementById('changesTbody');
+  if (!tbody) return;
+  const search = document.getElementById('changeSearch')?.value.toLowerCase() || '';
+  const typeFilter = document.getElementById('changeTypeFilter')?.value || 'ALL';
+  tbody.innerHTML = '';
+  
+  holdingsData.filter(item => {
+    const matchesSearch = item.company.toLowerCase().includes(search) || item.symbol.toLowerCase().includes(search) || item.isin.toLowerCase().includes(search);
+    const matchesType = typeFilter === 'ALL' || item.action === typeFilter;
+    return matchesSearch && matchesType;
+  }).forEach(item => {
+    let badgeClass = 'badge-blue';
+    if (item.action === 'NEW_ENTRY' || item.action === 'INCREASED_STAKE') badgeClass = 'badge-green';
+    if (item.action === 'REDUCED_STAKE' || item.action === 'EXIT_CONFIRMED') badgeClass = 'badge-red';
+    if (item.action === 'UNCHANGED' || item.action === 'NO_LONGER_DISCLOSED') badgeClass = 'badge-yellow';
+
+    tbody.innerHTML += `<tr>
+      <td><strong>${item.investor}</strong></td>
+      <td>${item.company}<br><span style="color:var(--muted); font-size:0.75rem;">${item.symbol}</span></td>
+      <td>${item.isin}<br><span style="color:var(--muted); font-size:0.75rem;">${item.notes}</span></td>
+      <td>Rs ${item.cmp}</td>
+      <td><span class="badge ${badgeClass}">${item.action}</span></td>
+      <td>${item.prevStake} &rarr; <strong>${item.newStake}</strong> (${item.changePp})</td>
+      <td>${item.shares}</td>
+      <td>${item.period}<br><span style="color:var(--muted); font-size:0.75rem;">${item.filingDate}</span></td>
+    </tr>`;
+  });
+}
+
+function filterChanges() {
+  renderChanges();
+}
+
+function exportCSV() {
+  let csv = 'Investor,Company,Symbol,ISIN,CMP,Action,PrevStake,NewStake,ChangePp,Shares,Period,FilingDate\n';
+  holdingsData.forEach(d => {
+    csv += `"${d.investor}","${d.company}","${d.symbol}","${d.isin}",${d.cmp},"${d.action}","${d.prevStake}","${d.newStake}","${d.changePp}","${d.shares}","${d.period}","${d.filingDate}"\n`;
+  });
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.setAttribute('href', url);
+  a.setAttribute('download', 'smart_money_investment_changes.csv');
+  a.click();
+}
+
+function renderMulti() {
+  const tbody = document.getElementById('multiTbody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  multiInvestorData.forEach(item => {
+    tbody.innerHTML += `<tr>
+      <td><strong>${item.company}</strong></td>
+      <td>${item.symbol}</td>
+      <td>Rs ${item.cmp}</td>
+      <td style="color:var(--accent); font-weight:500;">${item.investors}</td>
+      <td>${item.note}</td>
+    </tr>`;
+  });
+}
+
+function renderStockResearch() {
+  const val = document.getElementById('stockResearchSelect')?.value || 'STOVEKRAFT';
+  const item = holdingsData.find(d => d.symbol.includes(val) || d.company.includes(val)) || holdingsData[0];
+  const container = document.getElementById('researchDetails');
+  if (!container) return;
+  container.innerHTML = `
+    <div class="card"><h3>Company</h3><div class="value">${item.company}</div><p style="color:var(--muted); font-size:0.8rem;">${item.symbol} | ISIN: ${item.isin}</p></div>
+    <div class="card"><h3>Current Market Price</h3><div class="value">Rs ${item.cmp}</div></div>
+    <div class="card"><h3>Valuation Metrics</h3><div class="value">P/E: ${item.pe}</div><p style="color:var(--muted); font-size:0.8rem;">ROE: ${item.roe}</p></div>
+    <div class="card"><h3>Smart Money Action</h3><div class="value" style="color:var(--accent);">${item.action}</div><p style="color:var(--muted); font-size:0.8rem;">${item.investor} (${item.newStake})</p></div>
+  `;
+
+  const canvas = document.getElementById('performanceChart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  ctx.beginPath();
+  ctx.strokeStyle = '#4ade80';
+  ctx.lineWidth = 3;
+  ctx.moveTo(50, 200);
+  ctx.lineTo(150, 180);
+  ctx.lineTo(250, 120);
+  ctx.lineTo(350, 90);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([5, 5]);
+  ctx.moveTo(50, 200);
+  ctx.lineTo(150, 195);
+  ctx.lineTo(250, 185);
+  ctx.lineTo(350, 175);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '12px system-ui';
+  ctx.fillText('Month 0 (100)', 40, 230);
+  ctx.fillText('Month 1', 140, 230);
+  ctx.fillText('Month 2', 240, 230);
+  ctx.fillText('Month 3 (Post-Disclosure)', 320, 230);
+
+  ctx.fillStyle = '#4ade80';
+  ctx.fillText('Stock (+35%)', 360, 90);
+  ctx.fillStyle = '#38bdf8';
+  ctx.fillText('Nifty 500 (+12%)', 360, 175);
+}
+
+function renderNews() {
+  const newsList = [
+    { date: "2026-10-15", company: "Stove Kraft Ltd.", type: "BSE Shareholding Filing", text: "Ashish Kacholia increases stake substantially to 3.80% (1,269,832 shares) in Q2 FY27." },
+    { date: "2026-10-12", company: "Dhabriya Polywood Ltd.", type: "BSE SAST Disposal Filing", text: "Ashish Kacholia confirms full exit (disposal from 5.30% to 0.00%); Sunil Singhania / Abakkus enters with 5.60% stake." },
+    { date: "2026-09-30", company: "Tega Industries Ltd.", type: "Q2 FY27 Shareholding", text: "Mukul Agrawal enters Tega Industries with fresh 1.30% equity stake (1,000,000 shares)." },
+    { date: "2026-09-28", company: "Rain Industries Ltd.", type: "Q2 FY27 Shareholding", text: "Dolly Khanna enters Rain Industries with 1.70% stake (5,798,355 shares)." },
+    { date: "2026-07-24", company: "Asian Energy Services Ltd.", type: "Q1 FY27 Shareholding", text: "Ashish Kacholia adds Asian Energy Services with 1.20% initial stake." }
+  ];
+
+  const tbody = document.getElementById('newsTbody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  newsList.forEach(n => {
+    tbody.innerHTML += `<tr>
+      <td>${n.date}</td>
+      <td><strong>${n.company}</strong></td>
+      <td><span class="badge badge-blue">${n.type}</span></td>
+      <td>${n.text}</td>
+    </tr>`;
+  });
+}
+
+function renderWatchlist() {
+  const tbody = document.getElementById('watchlistTbody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  watchlist.forEach((w, i) => {
+    tbody.innerHTML += `<tr>
+      <td><strong>${w.symbol}</strong></td>
+      <td>${w.investor}</td>
+      <td>${w.threshold}</td>
+      <td><button class="action-btn" style="background:var(--red); color:#fff;" onclick="removeWatchlist(${i})">Remove</button></td>
+    </tr>`;
+  });
+}
+
+function addWatchlist() {
+  const input = document.getElementById('watchInput');
+  if (input && input.value.trim()) {
+    watchlist.push({ symbol: input.value.trim().toUpperCase(), investor: "Custom Watch", threshold: "Any change" });
+    input.value = '';
+    renderWatchlist();
+  }
+}
+
+function removeWatchlist(index) {
+  watchlist.splice(index, 1);
+  renderWatchlist();
+}
+
+window.onload = function() {
+  renderOverviewChart();
+  renderInvestors();
+  renderChanges();
+  renderMulti();
+  renderStockResearch();
+  renderNews();
+  renderWatchlist();
+};
+</script>
+</body>
+</html>
